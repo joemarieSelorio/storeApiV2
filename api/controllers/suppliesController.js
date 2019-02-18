@@ -2,6 +2,8 @@ require('app-module-path').addPath(require('app-root-path').toString());
 
 const Supplies = require('api/models/Supplies');
 const Ratings = require('api/models/Ratings');
+const {map} = require('lodash');
+const {getAllSupplies} = require('api/repositories/suppliesRepositories');
 const {validSupply, validRating} = require('api/utilities/validator');
 const HttpError = require('api/responses/HttpError');
 const NotFoundError = require('api/responses/NotFoundError');
@@ -16,15 +18,26 @@ const HttpSuccess = require('api/responses/HttpSuccess');
  */
 async function getSupplies(req, res, next) {
   try {
-    const supplies = await Supplies.find();
+    const supplies = await getAllSupplies();
+    const suppliesSummary = map(supplies, (row)=> {
+      return {
+        id: row.id,
+        data: {
+          name: row.name,
+          description: row.description,
+          imageUrl: row.imageURL,
+          quantity: row.quantity,
+        },
+        status: row.status,
+      };
+    });
     res.locals.respObj = new HttpSuccess(200,
-        `Successfully retrieve all Supplies`, supplies);
+        `Successfully retrieve all Supplies`, suppliesSummary);
     return next();
   } catch (e) {
-    return next(new HttpError(500, 9999, 'Database error'));
+    return next(new HttpError(500, 9999, e.message));
   }
 }
-
 /**
  *Get Details
  * @todo Retrive details of specific supply item
@@ -32,7 +45,7 @@ async function getSupplies(req, res, next) {
  * @param {object} res  - Response to the Server
  * @param {object} next - Next function to be executed
  */
-async function getDetails(req, res, next) {
+async function getSupplyById(req, res, next) {
   try {
     const id = req.params.id;
     const selectedSupply = await Supplies.findById(id).populate('ratings');
@@ -142,7 +155,7 @@ async function deleteSupply(req, res, next) {
 
 module.exports = {
   getSupplies,
-  getDetails,
+  getSupplyById,
   addSupply,
   addRatings,
   deleteSupply,

@@ -2,18 +2,30 @@ require('app-module-path').addPath(require('app-root-path').toString());
 require('dotenv').config();
 
 const express = require('express');
-const mongoose = require('mongoose');
+const {createConnection} = require('mysql');
 const bodyParser = require('body-parser');
 const HttpError = require('api/responses/HttpError');
-// const seedDB = require('api/seeds/Seeds');
 const app = express();
 
-// seedDB();
+const connection = createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '1234',
+  database: 'suppliesdb',
+});
+
+connection.connect((err)=>{
+  if (err) {
+    // eslint-disable-next-line no-console
+    console.log(err);
+    return;
+  }
+  // eslint-disable-next-line no-console
+  console.log('Mysql Initialized');
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-
-mongoose.connect(process.env.CONNECTION_STRING, {useNewUrlParser: true});
 
 app.use('/api/supplies/'
     , require('api/routers/SuppliesRouter'), _processResponse);
@@ -27,7 +39,6 @@ app.use('/api/supplies/'
 function _processResponse(req, res) {
   return res.status(res.locals.respObj.status).json(res.locals.respObj);
 }
-
 app.use((error, req, res, next) => {
   if (!(error instanceof HttpError)) {
     const errorObj = new HttpError();
@@ -38,7 +49,6 @@ app.use((error, req, res, next) => {
 });
 
 app.listen(process.env.PORT || 8080, async ()=>{
+  // eslint-disable-next-line no-console
   console.log(`Listening to port ${process.env.PORT}`);
 });
-
-

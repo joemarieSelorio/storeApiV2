@@ -2,12 +2,13 @@ require('app-module-path').addPath(require('app-root-path').toString());
 
 const express = require('express');
 const router = new express.Router();
-const {getSupplies, getDetails, addSupply, addRatings, deleteSupply} = require(
+const {getSupplies, getSupplyById, addSupply,
+  addRatings, deleteSupply} = require(
     'api/controllers/SuppliesController');
 
 router.get('/', getSupplies);
 
-router.get('/:id', getDetails);
+router.get('/:id', getSupplyById);
 
 router.post('/', addSupply);
 
