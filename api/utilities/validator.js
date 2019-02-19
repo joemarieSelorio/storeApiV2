@@ -32,7 +32,7 @@ function validSupply(payload) {
   const schema = createSchema({
     name: joi.string().required(),
     description: joi.string().required(),
-    imageURL: joi.string().required(),
+    imageUrl: joi.string().required(),
     quantity: joi.number().integer().min(1).max(500).required(),
   });
   return validate(payload, schema);

@@ -2,13 +2,13 @@ require('app-module-path').addPath(require('app-root-path').toString());
 
 const Supplies = require('api/models/Supplies');
 const Ratings = require('api/models/Ratings');
-const {map} = require('lodash');
-const {getAllSupplies} = require('api/repositories/suppliesRepositories');
+const {map, pick} = require('lodash');
+const {getAllSupplies, getSupplyById, createNewSupply, getSupplyByName} =
+   require('api/repositories/suppliesRepositories');
 const {validSupply, validRating} = require('api/utilities/validator');
 const HttpError = require('api/responses/HttpError');
 const NotFoundError = require('api/responses/NotFoundError');
 const HttpSuccess = require('api/responses/HttpSuccess');
-
 /**
  *Get Supplies
  * @todo Retrive all Supplies in DB
@@ -25,7 +25,7 @@ async function getSupplies(req, res, next) {
         data: {
           name: row.name,
           description: row.description,
-          imageUrl: row.imageURL,
+          imageUrl: row.imageUrl,
           quantity: row.quantity,
         },
         status: row.status,
@@ -45,21 +45,23 @@ async function getSupplies(req, res, next) {
  * @param {object} res  - Response to the Server
  * @param {object} next - Next function to be executed
  */
-async function getSupplyById(req, res, next) {
+async function getSpecificSupply(req, res, next) {
   try {
     const id = req.params.id;
-    const selectedSupply = await Supplies.findById(id).populate('ratings');
-    if (!selectedSupply) {
+    // const selectedSupply = await Supplies.findById(id).populate('ratings');
+    const supply = await getSupplyById(id);
+    if (!supply) {
       return next(new NotFoundError('Supplies not found'));
     }
     res.locals.respObj = new HttpSuccess(200,
-      `Successfully retrive details of ${selectedSupply.name}`, selectedSupply._doc); // eslint-disable-line
+        `Successfully retrive details`,
+        {supply: pick(supply,
+            ['id', 'name', 'description', 'imageUrl', 'quantity'])});
     return next();
   } catch (e) {
-    return next(new HttpError(500, 9999, 'Database error'));
+    return next(new HttpError(500, 9999, e.message));
   }
 }
-
 /**
  * Add Supply
  * @todo add a supply item
@@ -69,21 +71,19 @@ async function getSupplyById(req, res, next) {
  */
 async function addSupply(req, res, next) {
   try {
-    const foundSupply = await Supplies.findOne({name: req.body.name});
-    if (foundSupply) {
+    const {name, description, imageUrl, quantity} = req.body;
+    const existingSupply = await getSupplyByName(name);
+    if (existingSupply) {
       return next(new HttpError(403, 9999,
           'Supply item is already in the inventory'));
     } else {
       if (validSupply(req.body)) {
-        const supplyDetails = {
-          name: req.body.name,
-          description: req.body.description,
-          imageURL: req.body.image,
-          quantity: req.body.quantity,
-        };
-        const newSupply = await Supplies.create(supplyDetails);
+        const newSupply = await createNewSupply(name,
+            description, imageUrl, quantity);
         res.locals.respObj = new HttpSuccess(200,
-            `Successfully added ${newSupply.name}`, newSupply._doc);
+            `Successfully added new supply`,
+            {newSupply: pick(newSupply,
+                ['id', 'name', 'description', 'imageUrl', 'quantity'])});
         return next();
       } else {
         return next(new HttpError(403, 9997, 'Invalid Supply details'));
@@ -93,7 +93,6 @@ async function addSupply(req, res, next) {
     return next(new HttpError(500, 9999, e.message));
   }
 }
-
 /**
  * Add supply ratings
  * @todo add ratings to a specific supply
@@ -155,7 +154,7 @@ async function deleteSupply(req, res, next) {
 
 module.exports = {
   getSupplies,
-  getSupplyById,
+  getSpecificSupply,
   addSupply,
   addRatings,
   deleteSupply,

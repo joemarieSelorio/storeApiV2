@@ -42,6 +42,36 @@ class MsqlService {
       throw new Error(error);
     }
   }
+
+  /**
+   * @param {*} id - id of supply to be use for searching
+   * @param {*} table - Mysql Table
+   * @param {*} fields - fields to be  retrieved
+   */
+  async getTableRow(id, table, fields) {
+    try {
+      return await knex.where({id}).select(...fields)
+          .first()
+          .from(table);
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  /**
+   * @param {*} name - name of supply to be use for searching
+   * @param {*} table - Mysql Table
+   * @param {*} fields - fields to be  retrieved
+   */
+  async getTableRowByName(name, table, fields) {
+    try {
+      return await knex.where({name}).select(...fields)
+          .first()
+          .from(table);
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
 }
 
 module.exports = MsqlService;

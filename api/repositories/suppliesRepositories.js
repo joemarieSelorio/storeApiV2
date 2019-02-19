@@ -6,12 +6,14 @@ const MysqlService = require('api/services/mysqlService');
 const service = new MysqlService();
 
 const createNewSupply = async (name, description, imageUrl, quantity) => {
+  const newSupply = {
+    name,
+    description,
+    imageUrl,
+    quantity,
+  };
   try {
-    return await service.insertIntoTable(
-        'supplies', {
-          name, description, imageUrl, quantity,
-        },
-    );
+    return await service.insertToTable('supplies', newSupply);
   } catch (error) {
     throw new Error(error);
   }
@@ -26,7 +28,27 @@ const getAllSupplies = async () => {
   }
 };
 
+const getSupplyById = async (id)=> {
+  const fields = ['name', 'description', 'imageUrl', 'quantity'];
+  try {
+    return await service.getTableRow(id, 'supplies', fields);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const getSupplyByName = async (name)=> {
+  const fields = ['description', 'imageUrl', 'quantity'];
+  try {
+    return await service.getTableRowByName(name, 'supplies', fields);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 module.exports = {
   createNewSupply,
   getAllSupplies,
+  getSupplyById,
+  getSupplyByName,
 };
