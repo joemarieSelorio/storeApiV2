@@ -1,9 +1,10 @@
 require('app-module-path').addPath(require('app-root-path').toString());
 
 const Supplies = require('api/models/Supplies');
-const Ratings = require('api/models/Ratings');
+// const Ratings = require('api/models/Ratings');
 const {map, pick} = require('lodash');
-const {getAllSupplies, getSupplyById, createNewSupply, getSupplyByName} =
+const {getAllSupplies, getSupplyById, createNewSupply,
+  getSupplyByName, createNewRating} =
    require('api/repositories/suppliesRepositories');
 const {validSupply, validRating} = require('api/utilities/validator');
 const HttpError = require('api/responses/HttpError');
@@ -102,22 +103,18 @@ async function addSupply(req, res, next) {
  */
 async function addRatings(req, res, next) {
   try {
-    const id = req.params.id;
-    const selectedSupply = await Supplies.findById(id);
+    const {id} = req.params;
+    console.log(id);
+    const selectedSupply = await getSupplyById(id);
     if (!selectedSupply) {
       return next(new NotFoundError('Supplies not found'));
     } else {
       if (validRating(req.body)) {
-        const ratingDetails = {
-          user: req.body.user,
-          rating: req.body.rating,
-        };
-        const rating = await Ratings.create(ratingDetails);
-        await selectedSupply.ratings.push(rating);
-        await selectedSupply.save();
+        const {user, rating} = req.body;
+        const newRating = await createNewRating(user, rating, id);
         res.locals.respObj = new HttpSuccess(200,
-            `Successfully added ratings to ${selectedSupply.name}`,
-            selectedSupply._doc);
+            `Successfully added ratings`, {newRating: pick(newRating,
+                ['id', 'user', 'rating', 'supplyId'])});
         return next();
       } else {
         return next(new HttpError(403, 9997,
@@ -126,7 +123,7 @@ async function addRatings(req, res, next) {
     }
   } catch (e) {
     return next(new HttpError(500, 9999,
-        'Database error'));
+        e.message));
   }
 }
 

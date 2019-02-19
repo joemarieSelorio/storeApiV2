@@ -19,6 +19,19 @@ const createNewSupply = async (name, description, imageUrl, quantity) => {
   }
 };
 
+const createNewRating = async (user, rating, supplyId) => {
+  const newRating = {
+    user,
+    rating,
+    supplyId,
+  };
+  try {
+    return await service.insertToTable('ratings', newRating);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 const getAllSupplies = async () => {
   const fields = ['id', 'name', 'description', 'imageUrl', 'quantity'];
   try {
@@ -29,7 +42,7 @@ const getAllSupplies = async () => {
 };
 
 const getSupplyById = async (id)=> {
-  const fields = ['name', 'description', 'imageUrl', 'quantity'];
+  const fields = ['name'];
   try {
     return await service.getTableRow(id, 'supplies', fields);
   } catch (error) {
@@ -48,6 +61,7 @@ const getSupplyByName = async (name)=> {
 
 module.exports = {
   createNewSupply,
+  createNewRating,
   getAllSupplies,
   getSupplyById,
   getSupplyByName,
