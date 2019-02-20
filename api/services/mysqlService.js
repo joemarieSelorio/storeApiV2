@@ -1,6 +1,5 @@
 
 require('app-module-path').addPath(require('app-root-path').toString());
-
 const knex = require('knex')(require('knexFile'));
 
 /**
@@ -57,7 +56,6 @@ class MsqlService {
       throw new Error(error);
     }
   }
-
   /**
    * @param {*} name - name of supply to be use for searching
    * @param {*} table - Mysql Table
@@ -72,6 +70,24 @@ class MsqlService {
       throw new Error(error);
     }
   }
+  /**
+   * @param {*} table1 - first table
+   * @param {*} table2 - second table
+   * @param {*} primaryKey - id of  first table
+   * @param {*} foreignKey - foreign key to
+   * refer id of first table to second table
+   */
+  async innerJoinTable(table1, table2, primaryKey, foreignKey) {
+    try {
+      const id = `${table1}.id`;
+      const supplyId = `${table2}.supplyId`;
+      return await knex.from(table1)
+          .innerJoin(table2, id,
+              supplyId).where({'supplies.id': primaryKey,
+            'ratings.supplyId': foreignKey});
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
 }
-
 module.exports = MsqlService;

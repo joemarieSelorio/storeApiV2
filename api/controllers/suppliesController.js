@@ -1,9 +1,8 @@
 require('app-module-path').addPath(require('app-root-path').toString());
-
 const Supplies = require('api/models/Supplies');
 // const Ratings = require('api/models/Ratings');
 const {map, pick} = require('lodash');
-const {getAllSupplies, getSupplyById, createNewSupply,
+const {getAllSupplies, getSupplyById, getSupplyRatings, createNewSupply,
   getSupplyByName, createNewRating} =
    require('api/repositories/suppliesRepositories');
 const {validSupply, validRating} = require('api/utilities/validator');
@@ -29,7 +28,6 @@ async function getSupplies(req, res, next) {
           imageUrl: row.imageUrl,
           quantity: row.quantity,
         },
-        status: row.status,
       };
     });
     res.locals.respObj = new HttpSuccess(200,
@@ -49,15 +47,21 @@ async function getSupplies(req, res, next) {
 async function getSpecificSupply(req, res, next) {
   try {
     const id = req.params.id;
-    // const selectedSupply = await Supplies.findById(id).populate('ratings');
+    const supplyId = id;
     const supply = await getSupplyById(id);
+    const ratings = await getSupplyRatings(id, supplyId);
     if (!supply) {
       return next(new NotFoundError('Supplies not found'));
     }
     res.locals.respObj = new HttpSuccess(200,
-        `Successfully retrive details`,
-        {supply: pick(supply,
-            ['id', 'name', 'description', 'imageUrl', 'quantity'])});
+        `Successfully retrive details`, {
+          details: pick(supply,
+              ['id', 'name', 'description', 'imageUrl', 'quantity']),
+          rating: map(ratings, (row)=>{
+            return {rating: row.rating,
+              user: row.user};
+          }),
+        });
     return next();
   } catch (e) {
     return next(new HttpError(500, 9999, e.message));
@@ -104,7 +108,6 @@ async function addSupply(req, res, next) {
 async function addRatings(req, res, next) {
   try {
     const {id} = req.params;
-    console.log(id);
     const selectedSupply = await getSupplyById(id);
     if (!selectedSupply) {
       return next(new NotFoundError('Supplies not found'));

@@ -41,9 +41,20 @@ const getAllSupplies = async () => {
   }
 };
 
-const getSupplyById = async (id)=> {
-  const fields = ['name'];
+const getSupplyRatings = async (id, supplyId)=> {
+  // try to specify fields to be retrieved when using inner join
   try {
+    return await service.innerJoinTable('supplies', 'ratings',
+        id, supplyId);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const getSupplyById = async (id)=> {
+  // try to specify fields to be retrieved when using inner join
+  try {
+    const fields = ['name', 'description', 'imageUrl', 'quantity'];
     return await service.getTableRow(id, 'supplies', fields);
   } catch (error) {
     throw new Error(error);
@@ -63,6 +74,7 @@ module.exports = {
   createNewSupply,
   createNewRating,
   getAllSupplies,
+  getSupplyRatings,
   getSupplyById,
   getSupplyByName,
 };
