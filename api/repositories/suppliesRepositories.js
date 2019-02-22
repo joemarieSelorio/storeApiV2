@@ -1,5 +1,6 @@
 
 require('app-module-path').addPath(require('app-root-path').toString());
+require('dotenv').config();
 
 const MysqlService = require('api/services/mysqlService');
 
@@ -42,7 +43,6 @@ const getAllSupplies = async () => {
 };
 
 const getSupplyRatings = async (id, supplyId)=> {
-  // try to specify fields to be retrieved when using inner join
   try {
     return await service.innerJoinTable('supplies', 'ratings',
         id, supplyId);
@@ -70,6 +70,22 @@ const getSupplyByName = async (name)=> {
   }
 };
 
+const deleteSupplyById = async (id)=> {
+  try {
+    return await service.deleteRow('supplies', id);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+const deleteRating = async (supplyId)=> {
+  try {
+    return await service.deleteRow('ratings', supplyId);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
 module.exports = {
   createNewSupply,
   createNewRating,
@@ -77,4 +93,6 @@ module.exports = {
   getSupplyRatings,
   getSupplyById,
   getSupplyByName,
+  deleteSupplyById,
+  deleteRating,
 };

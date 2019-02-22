@@ -1,9 +1,8 @@
 require('app-module-path').addPath(require('app-root-path').toString());
-const Supplies = require('api/models/Supplies');
-// const Ratings = require('api/models/Ratings');
+// const Supplies = require('api/models/Supplies');
 const {map, pick} = require('lodash');
 const {getAllSupplies, getSupplyById, getSupplyRatings, createNewSupply,
-  getSupplyByName, createNewRating} =
+  getSupplyByName, createNewRating, deleteRating, deleteSupplyById} =
    require('api/repositories/suppliesRepositories');
 const {validSupply, validRating} = require('api/utilities/validator');
 const HttpError = require('api/responses/HttpError');
@@ -46,7 +45,7 @@ async function getSupplies(req, res, next) {
  */
 async function getSpecificSupply(req, res, next) {
   try {
-    const id = req.params.id;
+    const {id} = req.params;
     const supplyId = id;
     const supply = await getSupplyById(id);
     const ratings = await getSupplyRatings(id, supplyId);
@@ -129,7 +128,6 @@ async function addRatings(req, res, next) {
         e.message));
   }
 }
-
 /**
  *Delete a supply
  * @todo delete a specific supply
@@ -140,18 +138,20 @@ async function addRatings(req, res, next) {
 async function deleteSupply(req, res, next) {
   try {
     const id = req.params.id;
-    const deletedSupplies = await Supplies.findByIdAndRemove(id);
-    if (!deletedSupplies) {
-      return next(new NotFoundError('Supplies not found'));
+    const supplyId = id;
+    const deletedSupply = await getSupplyById(id);
+    if (!deletedSupply) {
+      return next(new NotFoundError('Supply not found'));
     }
+    await deleteRating({supplyId});
+    await deleteSupplyById({id});
     res.locals.respObj = new HttpSuccess(200,
-        `Successfully deleted ${deletedSupplies.name}`); // eslint-disable-line
+        `Successfully deleted supply and its rating`);
     return next();
   } catch (e) {
-    return next(new HttpError(500, 9999, 'Database error'));
+    return next(new HttpError(500, 9999, e.message));
   }
 }
-
 module.exports = {
   getSupplies,
   getSpecificSupply,

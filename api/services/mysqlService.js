@@ -1,6 +1,7 @@
 
 require('app-module-path').addPath(require('app-root-path').toString());
 const knex = require('knex')(require('knexFile'));
+require('dotenv').config();
 
 /**
  * MySql Adapter Service
@@ -25,7 +26,6 @@ class MsqlService {
         ...fields,
     ).from(table);
   }
-
   /**
    * @param {String} table - Mysql Table
    * @param {String} fields - Fields to be retrived
@@ -41,7 +41,6 @@ class MsqlService {
       throw new Error(error);
     }
   }
-
   /**
    * @param {*} id - id of supply to be use for searching
    * @param {*} table - Mysql Table
@@ -89,5 +88,14 @@ class MsqlService {
       throw new Error(error);
     }
   }
+  /**
+   * @param {*} table - Mysql Table
+   * @param {Object} id  - id of the supply
+   */
+  async deleteRow(table, id) {
+    return await knex(table).where(id).del();
+  }
 }
+
+
 module.exports = MsqlService;
